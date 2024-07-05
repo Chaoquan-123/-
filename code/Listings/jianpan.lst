@@ -1,0 +1,163 @@
+C51 COMPILER V9.60.0.0   JIANPAN                                                           04/23/2022 11:11:48 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE JIANPAN
+OBJECT MODULE PLACED IN .\Objects\jianpan.obj
+COMPILER INVOKED BY: D:\keil\C51\BIN\C51.EXE jianpan.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\jian
+                    -pan.lst) TABS(2) OBJECT(.\Objects\jianpan.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #define uint unsigned int
+   3          #define uchar unsigned char
+   4          #define ulong unsigned long
+   5            sbit col_1=P3^4;
+   6            sbit col_2=P3^5;
+   7            sbit col_3=P3^6;
+   8            sbit col_4=P3^7;  //矩阵键盘地址分配
+   9            ////////////////
+  10           sbit lcdrs=P0^7;
+  11           sbit lcdrw=P0^6;
+  12           sbit lcde=P0^5;    //液晶显示地址分配
+  13           sbit led_green=P0^1;
+  14           sbit feng=P0^1;
+  15           sbit pwm=P0^4;
+  16           ////////////////
+  17           sfr ADC_LOW2=0xBE;   //ADC low 2-bit result register;
+  18          #define ADC_POWER   0x80            //ADC电源控制位
+  19          #define ADC_FLAG    0x10            //ADC完成标志
+  20          #define ADC_START   0x08            //ADC起始控制位
+  21          #define ADC_SPEEDLL 0x00            //540个时钟
+  22          #define ADC_SPEEDL  0x20            //360个时钟
+  23          #define ADC_SPEEDH  0x40            //180个时钟
+  24          #define ADC_SPEEDHH 0x60            //90个时钟
+  25          #define uchar unsigned char 
+  26          #define  uint unsigned int
+  27          
+  28          uint num=0;
+  29          uint count=0;
+  30          uchar pwm_count=0;
+  31          uchar num_py;
+  32          uchar py_count=0;
+  33          uint pwm_count1; 
+  34          bit z_bit1,z_bit2;z_bit3;
+  35          bit py_bit; 
+  36          bit pz_bit;
+  37          uint ad_ture=0; 
+  38          uchar keynum,flag=0;
+  39          uchar num1,num2,flag1,flag2,flag3,flag4;
+  40          uint jiao=0; 
+  41          uchar set_jiao=0;
+  42          uint t0_count=0;
+  43          bit display_bit=1,flag_bit=0,set_jiao_bit=1; 
+  44          uchar s1[3]={0x01,0x22,0x00}; 
+  45          
+  46          uint s2[2]={0,0}; 
+  47          uint s3[5]={0,0,0,0,0}; 
+  48          uint kk=0; 
+  49          uint a,c;
+  50          //////////////////
+  51          void InitADC(); //AD转换初始化
+  52          uchar GetADCResult(uchar ch);    //获取转换初值
+  53          uint  get_adc(uchar ch);
+  54          void keyscan(void);
+C51 COMPILER V9.60.0.0   JIANPAN                                                           04/23/2022 11:11:48 PAGE 2   
+
+  55          void keyfind(unsigned char);
+  56          void keyprocess(void);
+  57          void delay_ad(uint t);  
+  58          
+  59           void keyscan()
+  60            {
+  61   1        col_1=0;col_2=0;col_3=0;col_4=0;//高位置0检测低位（列）有没有按下
+  62   1        if((P3&0x0f)!=0x0f)
+  63   1        {
+  64   2        col_1=0;col_2=1;col_3=1;col_4=1;keyfind(0);
+  65   2        col_1=1;col_2=0;col_3=1;col_4=1;keyfind(4);
+  66   2        col_1=1;col_2=1;col_3=0;col_4=1;keyfind(8);
+  67   2        col_1=1;col_2=1;col_3=1;col_4=0;keyfind(12);
+  68   2        col_1=0;col_2=0;col_3=0;col_4=0;flag++;
+  69   2        while(((P3&0x0f)!=0x0f));//等待按键弹回跳出这个if语句，按一次flag=1依次递增
+  70   2        }
+  71   1        }
+  72          
+  73            
+  74            void keyfind(unsigned char col_dat)
+  75            {
+  76   1        unsigned char temp;
+  77   1        temp=(~P3)&0x0f;
+  78   1        switch(temp)
+  79   1        {
+  80   2        case 1:keynum=1+col_dat;break;
+  81   2         case 2:keynum=2+col_dat;break;
+  82   2          case 4:keynum=3+col_dat;break;
+  83   2         case 8:keynum=4+col_dat;break;
+  84   2        }
+  85   1        }
+  86            void keyprocess(void)
+  87            {
+  88   1        switch(keynum)
+  89   1        {
+  90   2        case 1:if(flag==1)num1=7;
+  91   2        if(flag==2)num2=7;break;
+  92   2         case 2:if(flag==1)num1=4;
+  93   2        if(flag==2)num2=4;break;
+  94   2         case 3:if(flag==1)num1=1;
+  95   2        if(flag==2)num2=1;break;
+  96   2         case 5:if(flag==1)num1=8;
+  97   2        if(flag==2)num2=8;break;
+  98   2         case 6:if(flag==1)num1=5;
+  99   2        if(flag==2)num2=5;break;
+ 100   2         case 7:if(flag==1)num1=2;
+ 101   2        if(flag==2)num2=2;break;
+ 102   2         case 8:if(flag==1)num1=0;
+ 103   2        if(flag==2)num2=0;break;
+ 104   2         case 9:if(flag==1)num1=9;
+ 105   2        if(flag==2)num2=9;break;
+ 106   2         case 10:if(flag==1)num1=6;
+ 107   2        if(flag==2)num2=6;break;
+ 108   2         case 11:if(flag==1)num1=3;
+ 109   2        if(flag==2)num2=3;break;
+ 110   2        case 4:flag1=1;break;//清除键
+ 111   2        case 12:flag=3;break;//确认键
+ 112   2        case 13:flag=4;break;
+ 113   2        case 14:flag=5;break;
+ 114   2        case 15:flag=6;break;
+ 115   2        case 16:flag=7;break;
+ 116   2        }
+C51 COMPILER V9.60.0.0   JIANPAN                                                           04/23/2022 11:11:48 PAGE 3   
+
+ 117   1      
+ 118   1        keynum=0;
+ 119   1        if(flag1==1)//取消键
+ 120   1        {
+ 121   2        z_bit1=1;z_bit2=0;z_bit3=0;//pwm_count=10;pwm_count1=10;
+ 122   2        num1=0;num2=0;num=0;
+ 123   2        feng=0;led_green=0;num_py=0;
+ 124   2        flag=0;flag1=0;flag2=0;flag3=0;flag4=0;
+ 125   2        }
+ 126   1        
+ 127   1        if(flag==1||flag3==1)
+ 128   1        {
+ 129   2        flag3=1;
+ 130   2        display_xy_recive(1,4,num);
+*** WARNING C206 IN LINE 130 OF jianpan.c: 'display_xy_recive': missing function-prototype
+*** ERROR C267 IN LINE 130 OF jianpan.c: 'display_xy_recive': requires ANSI-style prototype
+ 131   2        delay(1);
+ 132   2        }
+ 133   1        if(flag==2||flag4==1)
+ 134   1        {
+ 135   2        flag4=1;
+ 136   2        display_xy_recive(1,4,num);
+ 137   2        delay(1);
+ 138   2        }
+ 139   1          num=num1*10+num2;
+ 140   1        if(num>60)py_bit=1;
+ 141   1        else py_bit=0;
+ 142   1        if(flag==3) //按下确认键
+ 143   1        {
+ 144   2        display_xy_recive(1,4,num);
+ 145   2        }
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  1 ERROR(S)

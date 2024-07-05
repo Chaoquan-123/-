@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\zhongjiban.obj" 
+TO ".\Objects\ÖÕ¼«°æ" 
+PRINT(".\Listings\ÖÕ¼«°æ.m51") RAMSIZE(256) 
